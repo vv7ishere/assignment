@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Dec 4 13:48:03 2022
+
+@author: vishnuv
+"""
+# importing the needed modules
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# using get_file function in order to fetch files.
+
+
+def get_file(filename):
+    """ 
+    This function takes filename as argument and
+    read the data file into dataframes
+    filename = The csv files which is to  be readed.
+    """
+
+# To read and sort the file and in order to interchange
+# the raw and column,we use transpose function.
+
+    data = pd.read_csv(filename)
+    list_drop = ['Country Code', 'Indicator Name', 'Indicator Code']
+    modify_data = data.drop(list_drop, axis=1)
+    datatranspose = modify_data.set_index('Country Name').transpose()
+    return data, datatranspose
+
+
+# Listing out the countries to filtering the countries
+C_list1 = ['Spain', 'China', 'India', 'United States']
+C_list2 = ['Spain', 'China', 'India', 'United States', 'Germany', 'Brazil']
+
+# Defining function for filtering the data.
+
+
+def filter_data(data):
+    """
+    Filtering the years and countries for plotting bar chart
+    data = to get the data from the csv file
+    """
+
+    data = data[['Country Name', 'Indicator Name',
+                 '1990', '1994', '2000', '2019']]
+    data = data[(data["Country Name"] == "Spain") |
+                (data["Country Name"] == "China") |
+                (data["Country Name"] == "India") |
+                (data["Country Name"] == "United States") |
+                (data["Country Name"] == "Germany") |
+                (data["Country Name"] == "Brazil")]
+    return data
+
+
+# Defining function for filtering years and countries for plotting line plot.
+
+
+def barplot(data, label1, label2, title, img):
+    """
+    data = to get the data from the csv file
+    label1 = The x axis representing the countries
+    label2 = The y axis representing the Energy consumption of countries over different years
+    title = The heading of the plot
+    img = location of the figure
+    """
+
+# plotting the bar chart.
+
+    plt.figure(figsize=(28, 20))
+    xy = plt.subplot(1, 1, 1)
+    x = np.arange(6)
+    width = 0.2
+
+    bar_plt1 = xy.bar(x, data["1990"], width, label=1990, color="red")
+    bar_plt2 = xy.bar(x+width, data["1994"], width, label=1994, color="blue")
+    bar_plt3 = xy.bar(x+width*2, data["2000"],
+                      width, label=2000, color="yellow")
+
+    xy.set_xlabel(label1, fontsize=40)
+    xy.set_ylabel(label2, fontsize=40)
+    xy.set_title(title, fontsize=40)
+    xy.set_xticks(x, C_list2, fontsize=30, rotation=90)
+    xy.legend(fontsize=30)
+
+    xy.bar_label(bar_plt1, padding=2, rotation=90, fontsize=18)
+    xy.bar_label(bar_plt2, padding=2, rotation=90, fontsize=18)
+    xy.bar_label(bar_plt3, padding=2, rotation=90, fontsize=18)
+    plt.savefig(img)
+    plt.show()
+# Defining Function for plotting Line plot.
+
+
+def line_plot(data, label1, label2, img):
+    """ 
+    data = to get the data from the csv file
+    label1 = The x axis representing the years 
+    label2 = The y axis representing the Co2 emission rate of different countries over different years
+    img = location of the figure
+    """
+# plotting the line graph and transposing the data.
+
+    plt.figure(figsize=(26, 10))
+    data_index = data.set_index('Country Name')
+    transpose_data = data_index.transpose()
+    transpose_data = transpose_data.drop(index=['Indicator Name'])
+    for i in range(len(C_list1)):
+        plt.plot(transpose_data.index,
+                 transpose_data[C_list1[i]], label=C_list1[i])
+    plt.title(label2, size=18)
+    plt.xlabel("Years", size=12)
+    plt.ylabel(label1, size=12)
+    plt.xticks(rotation=90)
+    plt.legend(fontsize=10)
+    plt.savefig(img)
+    plt.show()
+
+# Defining the function for finding the average.
+
+
+def print_stats(dist):
+    print("2020")
+    print("average: ", np.mean(dist))
+    return
+
+# Defining function for plotting the pie chart for finding the mean.
+
+
+def pie_chart(mean_pop_1990, img):
+    """
+Pie chart for finding the mean of poppulation growth over the years '1990' and '2020.'
+mean_pop_1990 = mean value of the poppulation
+img = location of the figure
+"""
+# Plotting the Pie chart
+    plt.figure()
+    plt.title("Mean of population growth")
+    plt.pie(mean_pop_1990["Mean"], autopct='%1.2f%%')
+    plt.legend(labels=mean_pop_1990["Year"], bbox_to_anchor=[1, 1])
+    plt.savefig(img)
+    plt.show()
+
+
+"""
+fetching the csv files from the source
+"""
+
+forest_data, forest_data1 = get_file("ForestArea.csv")
+forest_data = filter_data(forest_data)
+energy_data, energy_data1 = get_file("energyCon.csv")
+energy_data = filter_data(energy_data)
+
+CO2_data, CO2_data1 = get_file("CO2_emission.csv")
+CO2_data = filter_data(CO2_data)
+
+Urban_data, Cereal_data1 = get_file("UrabPop.csv")
+Urban_data = filter_data(Urban_data)
+
+poplgrowth1 = pd.read_csv("vv111.csv")
+poppulation_filtered = filter_data(poplgrowth1)
+years = [1990, 2019]
+mean_1990 = np.mean(poppulation_filtered['1990'])
+mean_2019 = np.mean(poppulation_filtered['2019'])
+mean_pop_1990 = pd.DataFrame({'Year': years,
+                              'Mean': [[mean_1990][0],
+                                       [mean_2019][0]]})
+print(mean_pop_1990)
+print_stats(Urban_data["2019"])
+# calling the function for plotting the bar diagram
+barplot(forest_data, "countries", "Forest Area",
+        "Change in forest Area", "forest bar plot")
+barplot(energy_data, "countries", "Energy Consumption",
+        " Change in energy Consumption", "Energy bar plot")
+# calling the function for plotting the line graph
+line_plot(CO2_data, "CO2 Emission ", "Change in CO2 Emission", "CO2 line plot")
+line_plot(Urban_data, "Urban Population",
+          " Change in Urban Population", "Urban line plot")
+# calling the function for plotting the pie chart
+pie_chart(mean_pop_1990, "Mean of population growth")
